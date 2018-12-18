@@ -1,0 +1,10 @@
+docker>=3.5.0
+jsonschema>=2.5.1
+lxml>=3.3.3
+OWSLib>=0.11.2
+pyproj>=1.9.5.1
+Shapely>=1.5.7
+Werkzeug>=0.10.4
+psutil>=4.3.1
+PyYAML>=3.12
+python-dateutil>=2.7.3
