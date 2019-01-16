@@ -11,26 +11,23 @@ import requests
 
 import pywps
 from pywps import Process, ComplexOutput, ComplexInput, Format, BoundingBoxInput, LiteralInput
-from .lib.helpers import getlogger
+from .lib.helpers import getlogger, get_config_value
 
 import socket
 import json
 import os, tempfile
-
-import pywps.configuration as config
-from pywps.response.status import WPS_STATUS
-from .lib.bbox_helpers import bbox_from_bboxinput
 import docker
 
+from pywps.response.status import WPS_STATUS
+from .lib.bbox_helpers import bbox_from_bboxinput
 
 LOGGER = getlogger("bidsraf")
-HOST_MOUNT_POINT = pywps.configuration.get_config_value("bidsraf", "data_mount_point")
-# SPARK_MASTER_IP = pywps.configuration.get_config_value("bidsraf", "spark_master_ip")
+HOST_MOUNT_POINT = get_config_value("data_mount_point", "bidsraf")
+# SPARK_MASTER_IP = get_config_value(spark_master_ip", "bidsraf")
 #SPARK_MASTER_IP = os.environ['SPARKMASTER_IP']
 
 class S2P(Process):
-    def __init__(self, cfg):
-        print("S2P::__init__({}): config.CONFIG='{}'".format(cfg, config.CONFIG))
+    def __init__(self):
         inputs = [
             BoundingBoxInput('bbox_in', 'ROI to process', ['epsg:4326', 'epsg:3035']),
             LiteralInput('platform_id', 'Satellite Platform. ex: PLEIADES-1B',
@@ -156,17 +153,16 @@ class S2P(Process):
         client = docker.from_env()
         container = client.containers.run("bidsraf/s2p",
                                           network="net-spark",
-                                          volumes={"/shared/data":
-                                                       {'bind': '/shared/data', 'mode': 'rw'},
-                                                   '/shared/data/secrets/tenants.toml':
-                                                       {'bind': '/etc/safescale/tenants.toml'},
-                                                   '/shared/data/safescale/features':
-                                                       {'bind': '/etc/safescale/features'}},
+                                          volumes={
+                                              '/shared/data':                      {'bind': '/shared/data', 'mode': 'rw'},
+                                              '/shared/data/secrets/tenants.toml': {'bind': '/etc/safescale/tenants.toml'},
+                                              '/shared/data/safescale/features':   {'bind': '/etc/safescale/features'}
+                                          },
                                           command="s2p /shared/data/products {}".format("bidsraf-sparkmaster"),
                                           stdout=True, stderr=True,
                                           auto_remove=False,
                                           detach=True
-                                          )
+                                         )
         while True:
             container_log = container.logs(stdout=True, stderr=True, tail=1).decode("utf-8")
             LOGGER.debug("Retrieved log from s2p : {}".format(container_log))
