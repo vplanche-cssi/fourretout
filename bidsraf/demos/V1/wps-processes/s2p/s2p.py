@@ -21,6 +21,9 @@ from pywps.response.status import WPS_STATUS
 from .lib.bbox_helpers import bbox_from_bboxinput
 import docker
 
+import pywps.configuration as config
+print(config.CONFIG)
+
 LOGGER = getlogger("bidsraf")
 HOST_MOUNT_POINT = pywps.configuration.get_config_value("bidsraf", "data_mount_point")
 # SPARK_MASTER_IP = pywps.configuration.get_config_value("bidsraf", "spark_master_ip")
