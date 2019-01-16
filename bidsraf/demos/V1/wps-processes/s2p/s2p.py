@@ -78,7 +78,7 @@ class S2P(Process):
             s = json.dumps(results, ensure_ascii=False)
             out.write(s)
 
-        response.outputs['outdatafile'].set_file(outfilename)
+        response.outputs['outdatafile'].file = outfilename
         return response
 
     def _make_docker_options(self, bbox):
