@@ -17,12 +17,11 @@ import socket
 import json
 import os, tempfile
 
+import pywps.configuration as config
 from pywps.response.status import WPS_STATUS
 from .lib.bbox_helpers import bbox_from_bboxinput
 import docker
 
-import pywps.configuration as config
-print(config.CONFIG)
 
 LOGGER = getlogger("bidsraf")
 HOST_MOUNT_POINT = pywps.configuration.get_config_value("bidsraf", "data_mount_point")
@@ -30,8 +29,9 @@ HOST_MOUNT_POINT = pywps.configuration.get_config_value("bidsraf", "data_mount_p
 #SPARK_MASTER_IP = os.environ['SPARKMASTER_IP']
 
 class S2P(Process):
-    def __init__(self):
-        print(config.CONFIG)
+    def __init__(self, cfg):
+        global config.CONFIG
+        print("S2P::__init__({}): config.CONFIG='{}'".format(cfg, config.CONFIG))
         inputs = [
             BoundingBoxInput('bbox_in', 'ROI to process', ['epsg:4326', 'epsg:3035']),
             LiteralInput('platform_id', 'Satellite Platform. ex: PLEIADES-1B',
