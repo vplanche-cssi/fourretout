@@ -9,7 +9,7 @@ WGS_3857 = Proj("+init=EPSG:3857")
 
 
 def bbox_from_bboxinput(bboxin: BoundingBoxInput) -> BoundingBox :
-    minx, miny, maxx, maxy = list(map(float, bboxin.get_data()))
+    minx, miny, maxx, maxy = list(map(float, bboxin.data))
     return BoundingBox(minx, miny, maxx, maxy, bboxin.crs)
 
 
