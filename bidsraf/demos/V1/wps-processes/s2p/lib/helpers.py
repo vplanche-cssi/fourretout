@@ -8,7 +8,8 @@ import errno
 import pywps.configuration as config
 import sys
 
-cfg_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pywps.cfg")
+import __main__
+cfg_file = os.path.join(os.path.dirname(os.path.abspath(__main__.__file__)), "pywps.cfg")
 
 LOGGER = logging.getLogger('Helper')
 LOGGER.setLevel(logging.DEBUG)
