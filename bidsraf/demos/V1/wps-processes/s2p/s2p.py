@@ -30,7 +30,6 @@ HOST_MOUNT_POINT = pywps.configuration.get_config_value("bidsraf", "data_mount_p
 
 class S2P(Process):
     def __init__(self, cfg):
-        global config.CONFIG
         print("S2P::__init__({}): config.CONFIG='{}'".format(cfg, config.CONFIG))
         inputs = [
             BoundingBoxInput('bbox_in', 'ROI to process', ['epsg:4326', 'epsg:3035']),
