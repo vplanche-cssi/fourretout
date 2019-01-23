@@ -174,7 +174,7 @@ class S2P(Process):
                 container_status = container.wait(timeout=5)
                 if container_status == 0:
                     break
-                # raise Exception('Something went wrong with eodag')
+                # raise Exception('Something went wrong with s2p')
                 LOGGER.warn("S2P exited with status code {}".format(container_status))
                 break
             except requests.exceptions.ReadTimeout:
