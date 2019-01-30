@@ -163,6 +163,7 @@ class S2P(Process):
                                           auto_remove=False,
                                           detach=True
                                          )
+        results = dict()
         while True:
             container_log = container.logs(stdout=True, stderr=True, tail=1).decode("utf-8")
             LOGGER.debug("Retrieved log from s2p : {}".format(container_log))
@@ -173,9 +174,12 @@ class S2P(Process):
                 client.containers
                 container_status = container.wait(timeout=5)
                 if container_status == 0:
+                    results.pop('ERROR_IN_WPS', None)
                     break
-                # raise Exception('Something went wrong with s2p')
-                LOGGER.warn("S2P exited with status code {}".format(container_status))
+                # raise Exception('Something went wrong with eodag')
+                msg = "S2P exited with status code {}".format(container_status)
+                LOGGER.warn(msg)
+                results['ERROR_IN_WPS'] = msg
                 break
             except requests.exceptions.ReadTimeout:
                 pass
@@ -185,6 +189,12 @@ class S2P(Process):
                 pass
             # except requests.packages.urllib3.exceptions.ReadTimeoutError:
             #     pass
+        if os.path.exists("/shared/data/result-product.json"):
+            with open("/shared/data/result-product.json") as json_datas:
+                results = json.load(json_datas)
+        else:
+            if 'ERROR_IN_WPS' not in results:
+                results['ERROR_IN_WPS'] = "Pas de fichier concernant les résultats !!!"
 
-        results = """{"bidsraf":"plop"}"""
         return results
+
