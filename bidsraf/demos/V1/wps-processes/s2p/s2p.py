@@ -3,7 +3,7 @@
 # -*- coding: utf-8 -*-
 # Copyright 2017-2018 CS Systemes d'Information (CS SI)
 # All rights reserved
-
+from __future__ import unicode_literals
 import time
 from xml.sax.saxutils import escape
 
@@ -71,10 +71,9 @@ class S2P(Process):
         self._launch_eodag(response)
 
         results = self._launch_s2p(response)
-
         outfilename = os.path.join(tempfile.gettempdir(), "BIDSRAF_" + str(self.uuid) + ".json")
         LOGGER.debug("OUT filename: {}".format(outfilename))
-        with open(outfilename, "w") as out:
+        with open(outfilename, "w", encoding='utf-8') as out:
             s = json.dumps(results, ensure_ascii=False)
             out.write(s)
 
