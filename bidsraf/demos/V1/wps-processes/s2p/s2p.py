@@ -156,13 +156,14 @@ class S2P(Process):
                                           volumes={
                                               '/shared/data':                      {'bind': '/shared/data', 'mode': 'rw'},
                                               '/shared/data/secrets/tenants.toml': {'bind': '/etc/safescale/tenants.toml'},
+                                              '/shared/data/secrets/rclone.conf': {'bind': '/root/.config/rclone/rclone.conf'},
                                               '/shared/data/safescale/features':   {'bind': '/etc/safescale/features'}
                                           },
                                           command="s2p /shared/data/products {}".format("bidsraf-sparkmaster"),
                                           stdout=True, stderr=True,
                                           auto_remove=False,
                                           detach=True
-                                         )
+                                          )
         results = dict()
         while True:
             container_log = container.logs(stdout=True, stderr=True, tail=1).decode("utf-8")
