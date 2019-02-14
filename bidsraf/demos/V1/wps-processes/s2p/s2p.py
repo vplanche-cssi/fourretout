@@ -26,12 +26,15 @@ HOST_MOUNT_POINT = get_config_value("data_mount_point", "bidsraf")
 # SPARK_MASTER_IP = get_config_value(spark_master_ip", "bidsraf")
 #SPARK_MASTER_IP = os.environ['SPARKMASTER_IP']
 
+
 class S2P(Process):
     def __init__(self):
         inputs = [
             BoundingBoxInput('bbox_in', 'ROI to process', ['epsg:4326', 'epsg:3035']),
             LiteralInput('platform_id', 'Satellite Platform. ex: PLEIADES-1B',
                          data_type='string', min_occurs=0, max_occurs=10),
+            LiteralInput('eodag_active', 'Activate EODAG. default: true',
+                         data_type='boolean', min_occurs=0, max_occurs=1, default=1),
             # ComplexInput(identifier='work',
             #              title='Input work parameters',
             #              abstract='Parametres du chantier a produire au format XML',
@@ -67,8 +70,14 @@ class S2P(Process):
             self._platform_id = [p.data for p in request.inputs.get('platform_id')]
         else:
             self._platform_id = None
-        self._make_docker_options(bbox)
-        self._launch_eodag(response)
+
+        if 'eodag_active' in request.inputs and request.inputs.get('eodag_active').data:
+            self._make_docker_options(bbox)
+            self._launch_eodag(response)
+        else:
+            response._update_status(message='EODAG not launched as requested',
+                                    status_percentage=1,
+                                    status=WPS_STATUS.STARTED)
 
         results = self._launch_s2p(response)
         outfilename = os.path.join(tempfile.gettempdir(), "BIDSRAF_" + str(self.uuid) + ".json")
@@ -87,7 +96,6 @@ class S2P(Process):
                                                          b.maxx,
                                                          b.maxy])))
 
-
     def _launch_eodag(self, response):
         LOGGER.debug("Launching EODAG")
         response._update_status(message='Launching EODAG', status_percentage=1, status=WPS_STATUS.STARTED)
@@ -95,7 +103,7 @@ class S2P(Process):
         # Create specific working dir
         products_dir = '/shared/data/products'
         work_dir = os.path.join('/shared/data', os.path.basename(self.workdir))
-        os.makedirs(work_dir, exist_ok =True)
+        os.makedirs(work_dir, exist_ok=True)
 
         # Evironment option
         env_opt = {}
