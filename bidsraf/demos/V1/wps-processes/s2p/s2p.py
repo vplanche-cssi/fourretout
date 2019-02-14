@@ -71,7 +71,7 @@ class S2P(Process):
         else:
             self._platform_id = None
 
-        if 'eodag_active' in request.inputs and request.inputs.get('eodag_active').data:
+        if 'eodag_active' in request.inputs and request.inputs.get('eodag_active')[0].data:
             self._make_docker_options(bbox)
             self._launch_eodag(response)
         else:
