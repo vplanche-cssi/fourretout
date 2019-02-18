@@ -17,6 +17,7 @@ import socket
 import json
 import os, tempfile
 import docker
+import re
 
 from pywps.response.status import WPS_STATUS
 from .lib.bbox_helpers import bbox_from_bboxinput
@@ -35,6 +36,8 @@ class S2P(Process):
                          data_type='string', min_occurs=0, max_occurs=10),
             LiteralInput('eodag_active', 'Activate EODAG. default: true',
                          data_type='boolean', min_occurs=0, max_occurs=1, default=1),
+            LiteralInput('roi_test', 'Sub part of the product to process. Expected syntax ex: 1000,1000,5000,5000',
+                         data_type='string', min_occurs=0, max_occurs=1),
             # ComplexInput(identifier='work',
             #              title='Input work parameters',
             #              abstract='Parametres du chantier a produire au format XML',
@@ -64,7 +67,6 @@ class S2P(Process):
         # Ensure workdir exist
         os.makedirs(self.workdir, exist_ok=True)
 
-        LOGGER.info("Launching docker eodag with ROI")
         bbox = request.inputs['bbox_in'][0]
         if 'platform_id' in request.inputs:
             self._platform_id = [p.data for p in request.inputs.get('platform_id')]
@@ -72,12 +74,23 @@ class S2P(Process):
             self._platform_id = None
 
         if 'eodag_active' in request.inputs and request.inputs.get('eodag_active')[0].data:
+            LOGGER.info("Launching docker eodag with ROI")
             self._make_docker_options(bbox)
             self._launch_eodag(response)
         else:
+            LOGGER.info("EODAG not launched as requested")
             response._update_status(message='EODAG not launched as requested',
                                     status_percentage=1,
                                     status=WPS_STATUS.STARTED)
+
+        if 'roi_test' in request.inputs:
+            roi_test_raw = request.inputs.get('roi_test')[0].data
+            try:
+                roi_test = list(map(int, re.split(r'[\s,]', roi_test_raw)))
+                with open(os.path.join(self.workdir, 's2p.cfg'), 'w') as cfg:
+                    cfg.write(json.dumps({'roi_test': roi_test}))
+            except ValueError as e:
+                response._update_status(message='Invalid roi_test value {}. {}'.format(roi_test_raw, str(e)))
 
         results = self._launch_s2p(response)
         outfilename = os.path.join(tempfile.gettempdir(), "BIDSRAF_" + str(self.uuid) + ".json")
@@ -164,7 +177,8 @@ class S2P(Process):
                                               '/shared/data':                      {'bind': '/shared/data', 'mode': 'rw'},
                                               '/shared/data/secrets/tenants.toml': {'bind': '/etc/safescale/tenants.toml'},
                                               '/shared/data/secrets/rclone.conf': {'bind': '/root/.config/rclone/rclone.conf'},
-                                              '/shared/data/safescale/features':   {'bind': '/etc/safescale/features'}
+                                              '/shared/data/safescale/features':   {'bind': '/etc/safescale/features'},
+                                              self.workdir: {'bind': '/etc/s2p/'}
                                           },
                                           command="s2p /shared/data/products {}".format("bidsraf-sparkmaster"),
                                           stdout=True, stderr=True,
