@@ -87,10 +87,14 @@ class S2P(Process):
             roi_test_raw = request.inputs.get('roi_test')[0].data
             try:
                 roi_test = list(map(int, re.split(r'[\s,]', roi_test_raw)))
-                with open(os.path.join(self.workdir, 's2p.cfg'), 'w') as cfg:
+                config_file_path = os.path.join(self.workdir, 's2p.cfg')
+                LOGGER.info('Saving roi_test to {}'.format(config_file_path))
+                with open(config_file_path, 'w') as cfg:
                     cfg.write(json.dumps({'roi_test': roi_test}))
             except ValueError as e:
                 response._update_status(message='Invalid roi_test value {}. {}'.format(roi_test_raw, str(e)))
+        else:
+            LOGGER.info('No roi_test in request')
 
         results = self._launch_s2p(response)
         outfilename = os.path.join(tempfile.gettempdir(), "BIDSRAF_" + str(self.uuid) + ".json")
