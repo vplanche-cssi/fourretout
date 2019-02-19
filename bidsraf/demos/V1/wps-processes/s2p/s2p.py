@@ -91,10 +91,13 @@ class S2P(Process):
                 LOGGER.info('Saving roi_test to {}'.format(config_file_path))
                 with open(config_file_path, 'w') as cfg:
                     cfg.write(json.dumps({'roi_test': roi_test}))
+                with open('/shared/data/s2p.cfg', 'w') as cfg:
+                    cfg.write(json.dumps({'roi_test': roi_test}))
             except ValueError as e:
+                LOGGER.warn('Error saving roi_test')
                 response._update_status(message='Invalid roi_test value {}. {}'.format(roi_test_raw, str(e)))
         else:
-            LOGGER.info('No roi_test in request')
+            LOGGER.info('No roi_test in requestdocker ')
 
         results = self._launch_s2p(response)
         outfilename = os.path.join(tempfile.gettempdir(), "BIDSRAF_" + str(self.uuid) + ".json")
@@ -174,6 +177,7 @@ class S2P(Process):
         response._update_status(message='Calling S2P', status_percentage=5,
                                 status=WPS_STATUS.STARTED)
 
+        config_file_path = os.path.join(self.workdir, 's2p.cfg')
         client = docker.from_env()
         container = client.containers.run("bidsraf/s2p",
                                           network="net-spark",
@@ -182,7 +186,8 @@ class S2P(Process):
                                               '/shared/data/secrets/tenants.toml': {'bind': '/etc/safescale/tenants.toml'},
                                               '/shared/data/secrets/rclone.conf': {'bind': '/root/.config/rclone/rclone.conf'},
                                               '/shared/data/safescale/features':   {'bind': '/etc/safescale/features'},
-                                              self.workdir: {'bind': '/etc/s2p/'}
+
+                                              config_file_path: {'bind': '/etc/s2p/s2p.cfg'}
                                           },
                                           command="s2p /shared/data/products {}".format("bidsraf-sparkmaster"),
                                           stdout=True, stderr=True,
