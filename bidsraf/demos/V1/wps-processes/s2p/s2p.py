@@ -87,11 +87,11 @@ class S2P(Process):
             roi_test_raw = request.inputs.get('roi_test')[0].data
             try:
                 roi_test = list(map(int, re.split(r'[\s,]', roi_test_raw)))
-                config_file_path = os.path.join(self.workdir, 's2p.cfg')
+                work_dir = os.path.join('/shared/data', os.path.basename(self.workdir))
+                os.makedirs(work_dir, exist_ok=True)
+                config_file_path = os.path.join(work_dir, 's2p.cfg')
                 LOGGER.info('Saving roi_test to {}'.format(config_file_path))
                 with open(config_file_path, 'w') as cfg:
-                    cfg.write(json.dumps({'roi_test': roi_test}))
-                with open('/shared/data/s2p.cfg', 'w') as cfg:
                     cfg.write(json.dumps({'roi_test': roi_test}))
             except ValueError as e:
                 LOGGER.warn('Error saving roi_test')
@@ -177,7 +177,9 @@ class S2P(Process):
         response._update_status(message='Calling S2P', status_percentage=5,
                                 status=WPS_STATUS.STARTED)
 
-        config_file_path = os.path.join(self.workdir, 's2p.cfg')
+        work_dir = os.path.join('/shared/data', os.path.basename(self.workdir))
+        config_file_path = os.path.join(work_dir, 's2p.cfg')
+
         client = docker.from_env()
         container = client.containers.run("bidsraf/s2p",
                                           network="net-spark",
@@ -186,7 +188,6 @@ class S2P(Process):
                                               '/shared/data/secrets/tenants.toml': {'bind': '/etc/safescale/tenants.toml'},
                                               '/shared/data/secrets/rclone.conf': {'bind': '/root/.config/rclone/rclone.conf'},
                                               '/shared/data/safescale/features':   {'bind': '/etc/safescale/features'},
-
                                               config_file_path: {'bind': '/etc/s2p/s2p.cfg'}
                                           },
                                           command="s2p /shared/data/products {}".format("bidsraf-sparkmaster"),
