@@ -22,10 +22,16 @@ import re
 from pywps.response.status import WPS_STATUS
 from .lib.bbox_helpers import bbox_from_bboxinput
 
+
+
 LOGGER = getlogger("bidsraf")
 HOST_MOUNT_POINT = get_config_value("data_mount_point", "bidsraf")
 # SPARK_MASTER_IP = get_config_value(spark_master_ip", "bidsraf")
 #SPARK_MASTER_IP = os.environ['SPARKMASTER_IP']
+
+# entities used to escape characters to be send to xml content
+entities = {'[': '&lsqb;',
+            ']': '&rsqb;'}
 
 
 class S2P(Process):
@@ -154,7 +160,7 @@ class S2P(Process):
         while True:
             container_log = container.logs(stdout=True, stderr=True, tail=5).decode("utf-8")
             LOGGER.debug("Retrieved log from eodag : {}".format(container_log))
-            response._update_status(message=escape(container_log), status_percentage=2, status=WPS_STATUS.STARTED)
+            response._update_status(message=escape(container_log, entities), status_percentage=2, status=WPS_STATUS.STARTED)
             try:
                 client.containers
                 container_status = container.wait(timeout=5)
@@ -199,7 +205,7 @@ class S2P(Process):
         while True:
             container_log = container.logs(stdout=True, stderr=True, tail=1).decode("utf-8")
             LOGGER.debug("Retrieved log from s2p : {}".format(container_log))
-            response._update_status(message=escape(container_log), status_percentage=2,
+            response._update_status(message=escape(container_log, entities), status_percentage=2,
                                     status=WPS_STATUS.STARTED)
 
             try:
