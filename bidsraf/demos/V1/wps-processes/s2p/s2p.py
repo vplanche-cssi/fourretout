@@ -196,7 +196,7 @@ class S2P(Process):
                                               '/shared/data/safescale/features':   {'bind': '/etc/safescale/features'},
                                               config_file_path: {'bind': '/etc/s2p/s2p.cfg'}
                                           },
-                                          command="s2p /shared/data/products {}".format("bidsraf-sparkmaster"),
+                                          command="s2p sve test_gra5 /shared/data/products {}".format("bidsraf-sparkmaster"),
                                           stdout=True, stderr=True,
                                           auto_remove=False,
                                           detach=True
